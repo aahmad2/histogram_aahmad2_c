@@ -26,22 +26,23 @@ int arr [N];
 
 
 void tallyGood(void *param){
-    int hist[MAXVAL];
+    //int hist[N];
 
     ThreadInfo *T = (ThreadInfo *) param;
-    for (int j=0; j<MAXVAL; ++j)
-        hist[j] = 0;
     for (int i=0; i<N; ++i)
-        hist[arr[i]] += 1;
+        T->histogram[arr[i]] += 1;
 }
 int main() {
 
     pthread_t tids[N];
 
-    for (int i = 0;i<N;i++){
+
+    //TODO: FIX THIS
+    for (int i = 1; i<N ;i++){
         double r = drand48();
-        arr[i]= r * i;
+        arr[i] = (r * MAXVAL/i);
     }
+
     pthread_mutex_t mutex;
     pthread_t tid1, tid2;
 
@@ -67,11 +68,16 @@ int main() {
     thread[3].endIndex = N-1;
     thread[3].histogram = histogram;
 
+    for (int j=0; j<MAXVAL; ++j)
+        histogram[j] = 0;
+
     gettimeofday(&t1, NULL);
     for (int k=0; k<NUM_THREADS; ++k)
         pthread_create(&tids[k], NULL, tallyGood, &thread[k]);
+
     for (int k=0; k<NUM_THREADS; ++k)
         pthread_join(tids[k], NULL);
+
     struct timeval t2;
     gettimeofday(&t2, NULL);
 
