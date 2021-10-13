@@ -10,7 +10,6 @@
 //Make a histogram, set all the vals to 0.
 int values[MAXVAL];
 int histogram[MAXVAL];
-int histogramBad[MAXVAL];
 
 typedef struct {
     int startIndex; // the first index in my region
@@ -70,21 +69,6 @@ void tallyGood(void *param){
 
     pthread_exit(0);
 }
-
-
-void *tallyBad(void *param) {
-    pthread_mutex_t *mutex;
-    mutex = (pthread_mutex_t *) param;
-    ThreadInfo *T = (ThreadInfo *) param;
-    // this is the code inside each thread
-    // each thread knows its own start and end values -- myStart and myEnd for (i=myStart; i<=myEnd; ++i) {
-    for (int i=T->startIndex; i<=T->endIndex; ++i) {
-        pthread_mutex_lock(mutex);
-        histogram[arr[i]] += 1;
-        pthread_mutex_unlock(mutex);
-    }
-}
-
 int main() {
 
     pthread_t tids[N];
@@ -125,55 +109,18 @@ int main() {
         histogram[j] = 0;
 
     gettimeofday(&t1, NULL);
-
-
     int newHistogram[MAXVAL];
+
     tallySerial(newHistogram);
-
-
-
     pthread_create(&tids[0], NULL, tallyGood, &thread[0]);
     pthread_create(&tids[1], NULL, tallyGood, &thread[1]);
     pthread_create(&tids[2], NULL, tallyGood, &thread[2]);
     pthread_create(&tids[3], NULL, tallyGood, &thread[3]);
+   // for (int k=0; k<NUM_THREADS; ++k)
+   //     pthread_create(&tids[k], NULL, tallyGood, &thread[k]);
 
     for (int k=0; k<NUM_THREADS; ++k)
         pthread_join(tids[k], NULL);
-
-
-
-    for (int j=0; j<MAXVAL; ++j)
-        histogramBad[j] = 0;
-
-    thread[0].startIndex = 0;
-    thread[0].endIndex = N/4;
-    thread[0].histogram = histogramBad;
-
-    thread[1].startIndex = N/4 + 1;
-    thread[1].endIndex =  N/2;
-    thread[1].histogram = histogramBad;
-
-    thread[2].startIndex = N/2 + 1;
-    thread[2].endIndex = (N/4 + N/2);
-    thread[2].histogram = histogramBad;
-
-    thread[3].startIndex = (N/4 + N/2) +  1;
-    thread[3].endIndex = N-1;
-    thread[3].histogram = histogramBad;
-
-
-
-    pthread_create(&tids[0], NULL, tallyBad, &thread[0]);
-    pthread_create(&tids[1], NULL, tallyBad, &thread[1]);
-    pthread_create(&tids[2], NULL, tallyBad, &thread[2]);
-    pthread_create(&tids[3], NULL, tallyBad, &thread[3]);
-
-    for (int k=0; k<NUM_THREADS; ++k)
-        pthread_join(tids[k], NULL);
-
-
-
-
 
     struct timeval t2;
     gettimeofday(&t2, NULL);
