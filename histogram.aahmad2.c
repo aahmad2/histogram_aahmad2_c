@@ -2,42 +2,34 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include "histogram.aahmad2.h"
 
-#define N 1000000
-#define NUM_THREADS 4
-#define MAXVAL 256
-
+// initialize values, global histogram, and histogramBad (for tallyBad) lists
 int values[N];
 int histogram[MAXVAL];
 int histogramBad[MAXVAL];
 
-typedef struct {
-    int startIndex; // the first index in my region
-    int endIndex; // the last index in my region
-    int *histogram; // the global histogram pthread_mutex_t *mutex; // a mutex, for synchronization
-} ThreadInfo;
 
+// tallySerial function, simple serial algorithm
 int tallySerial(int *histogram) {
-    int j;
-    for (j = 0; j < MAXVAL; ++j) {
+    // set global histogram to 0
+    for (int j = 0; j < MAXVAL; ++j) {
         histogram[j] = 0;
     }
+    // populate histogram with N
     for (int i = 0; i < N; ++i) {
         histogram[values[i]] += 1;
     }
 }
 
-
-
-
-
+// tallyGood function, efficient tally algorithm
 void tallyGood(void *param){
+    // create local histogram
     int hist[MAXVAL];
     pthread_mutex_t *mutex;
     mutex = (pthread_mutex_t *) param;
     ThreadInfo *T = (ThreadInfo *) param;
     int *globHist = T->histogram;
-
     for (int i = 0; i < MAXVAL; ++i) {
         hist[i] = 0;
     }
@@ -53,6 +45,7 @@ void tallyGood(void *param){
 }
 
 
+// tallyBad function, inefficient tally algorithm, (slower)
 void *tallyBad(void *param) {
     int hist[MAXVAL];
     pthread_mutex_t *mutex;
@@ -69,22 +62,16 @@ void *tallyBad(void *param) {
 }
 
 int main() {
-
+    // create instance thread
     pthread_t tids[N];
 
-
+    // randomize numbers
     for (int i = 1; i<N ;i++){
         double r = drand48();
         values[i] = r * MAXVAL;
     }
 
-    pthread_mutex_t mutex;
-    pthread_t tid1, tid2;
-
-    pthread_mutex_init(&mutex, NULL);
-
-    struct timeval t1;
-
+    // create threads and allocate split up sizes
     ThreadInfo thread[NUM_THREADS];
 
     thread[0].startIndex = 0;
@@ -107,11 +94,11 @@ int main() {
         histogram[j] = 0;
 
 
-
     int newHistogram[MAXVAL];
     tallySerial(newHistogram);
 
-
+    // t1 and t2 for comparing times
+    struct timeval t1;
     gettimeofday(&t1, NULL);
 
     pthread_create(&tids[0], NULL, tallyGood, &thread[0]);
@@ -128,6 +115,7 @@ int main() {
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     printf("elapsed time for tallyGood: %f ms\n", elapsedTime);
 
+    // for tallyBad function
     for (int j=0; j<MAXVAL; ++j)
         histogramBad[j] = 0;
 
@@ -162,9 +150,6 @@ int main() {
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     printf("elapsed time for tallyBad: %f ms\n", elapsedTime);
 
-
-
     return 0;
-
 
 }
