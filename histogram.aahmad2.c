@@ -69,6 +69,20 @@ void tallyGood(void *param){
 
     pthread_exit(0);
 }
+
+
+void *tallyBad(void *param) {
+    int i = 0;
+    pthread_mutex_t *mutex;
+    mutex = (pthread_mutex_t *) param;
+    // this is the code inside each thread
+    // each thread knows its own start and end values -- myStart and myEnd for (i=myStart; i<=myEnd; ++i) {
+    pthread_mutex_lock(mutex);
+    histogram[values[i]] += 1;
+    pthread_mutex_unlock(mutex);
+    pthread_exit(0);
+}
+
 int main() {
 
     pthread_t tids[N];
