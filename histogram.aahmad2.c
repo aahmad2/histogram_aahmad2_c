@@ -7,7 +7,7 @@
 #define NUM_THREADS 4
 #define MAXVAL 256
 
-int values[MAXVAL];
+int values[N];
 int histogram[MAXVAL];
 int histogramBad[MAXVAL];
 
@@ -106,13 +106,13 @@ int main() {
     for (int j=0; j<MAXVAL; ++j)
         histogram[j] = 0;
 
-    gettimeofday(&t1, NULL);
 
 
     int newHistogram[MAXVAL];
     tallySerial(newHistogram);
 
 
+    gettimeofday(&t1, NULL);
 
     pthread_create(&tids[0], NULL, tallyGood, &thread[0]);
     pthread_create(&tids[1], NULL, tallyGood, &thread[1]);
@@ -121,8 +121,12 @@ int main() {
 
     for (int k=0; k<NUM_THREADS; ++k)
         pthread_join(tids[k], NULL);
+    struct timeval t2;
+    gettimeofday(&t2, NULL);
 
-
+    float elapsedTime;
+    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
+    printf("elapsed time for tallyGood: %f ms\n", elapsedTime);
 
     for (int j=0; j<MAXVAL; ++j)
         histogramBad[j] = 0;
@@ -144,6 +148,7 @@ int main() {
     thread[3].histogram = histogramBad;
 
 
+    gettimeofday(&t1, NULL);
 
     pthread_create(&tids[0], NULL, tallyBad, &thread[0]);
     pthread_create(&tids[1], NULL, tallyBad, &thread[1]);
@@ -152,9 +157,11 @@ int main() {
 
     for (int k=0; k<NUM_THREADS; ++k)
         pthread_join(tids[k], NULL);
-
-    struct timeval t2;
     gettimeofday(&t2, NULL);
+
+    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
+    printf("elapsed time for tallyBad: %f ms\n", elapsedTime);
+
 
 
     return 0;
