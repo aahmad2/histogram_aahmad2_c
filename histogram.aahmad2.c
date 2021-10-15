@@ -57,10 +57,7 @@ void tallyGood(void *param){
     }
     for (int i=T->startIndex; i<=T->endIndex; ++i)
         hist[arr[i]] += 1;
-
     // lock mutex
-
-
     // iterate through hist
     pthread_mutex_lock(mutex);
     for (int j = 0; j < MAXVAL; ++j)
