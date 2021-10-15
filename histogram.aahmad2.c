@@ -53,7 +53,7 @@ void tallyGood(void *param){
     // at the end, use mutex to stitch together each count from all *T
     // pthread mutex lock
 
-    for (int i= 0; i < MAXVAL; ++i) {
+    for (int i = 0; i < MAXVAL; ++i) {
         hist[i] = 0;
     }
     for (int i=T->startIndex; i<=T->endIndex; ++i)
@@ -73,6 +73,7 @@ void tallyGood(void *param){
 
 
 void *tallyBad(void *param) {
+    int hist[MAXVAL];
     pthread_mutex_t *mutex;
     mutex = (pthread_mutex_t *) param;
     ThreadInfo *T = (ThreadInfo *) param;
@@ -80,9 +81,11 @@ void *tallyBad(void *param) {
     // each thread knows its own start and end values -- myStart and myEnd for (i=myStart; i<=myEnd; ++i) {
     for (int i=T->startIndex; i<=T->endIndex; ++i) {
         pthread_mutex_lock(mutex);
-        histogram[arr[i]] += 1;
+        hist[arr[i]] += 1;
         pthread_mutex_unlock(mutex);
     }
+    for (int j = 0; j < MAXVAL; ++j)
+        T->histogram[j] += hist[j];
 }
 
 int main() {
